@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>VALORANT Map Tool Pro</title>
+<style>
+body { margin:0; font-family: Arial; background:#0f1923; color:white; text-align:center; }
+h1 { padding:15px; background:black; font-size:24px; }
+button { margin:8px; padding:10px 15px; border:none; border-radius:8px; background:#ff4655; color:white; cursor:pointer; }
+.maps { display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; justify-content:center; margin:15px; } /* 横最大5列 */
+.map { position:relative; cursor:pointer; }
+.map img { width:100%; border-radius:8px; transition:0.3s; }
+.map-name { background: rgba(0,0,0,0.7); padding:4px; position:absolute; bottom:0; width:100%; font-size:14px; font-weight:bold; text-align:center; }
+.banned { filter: grayscale(100%) brightness(0.5); }
+.banned::after { content:"BAN"; position:absolute; top:5px; left:5px; background:red; padding:3px 6px; font-size:12px; font-weight:bold; border-radius:3px; }
+.picked { outline:3px solid #00ffcc; }
+.picked::after { content:"PICK"; position:absolute; top:5px; left:5px; background:#00c853; padding:3px 6px; font-size:12px; font-weight:bold; border-radius:3px; }
+#log { margin-top:20px; font-size:14px; text-align:left; max-width:700px; margin-left:auto; margin-right:auto; }
+#randomResult { margin-top:20px; font-size:20px; font-weight:bold; }
+#randomResult img { max-width:300px; margin-top:10px; border-radius:8px; }
+</style>
+</head>
+<body>
+
+<h1>VALORANT Map Tool Pro</h1>
+
+<div class="mode-switch">
+  <label><input type="radio" name="mode" value="random" checked onchange="switchMode()"> ランダム</label>
+  <label><input type="radio" name="mode" value="banpick" onchange="switchMode()"> BAN & PICK</label>
+</div>
+
+<div id="randomSection">
+  <div id="randomControls">
+    <label><input type="radio" name="pool" value="custom" checked onchange="renderRandomList()"> カスタム（全マップ）</label>
+    <label><input type="radio" name="pool" value="competitive" onchange="renderRandomList()"> コンペ（ランク）</label>
+  </div>
+  <div class="maps" id="randomMapList"></div>
+  <button onclick="pickRandom()">ランダムで決める</button>
+  <div id="randomResult"></div>
+</div>
+
+<div id="banpickSection" style="display:none">
+  <div id="banInfo" style="font-size:22px; margin-top:10px;">Team A BAN</div>
+  <div class="maps" id="banMapList"></div>
+  <div id="log"></div>
+</div>
+
+<script>
+const allMaps = [
+  {name:"ヘイブン", img:"https://img.gamewith.jp/img/211a82577eb5cfdb98700edeca42bc03.png"},
+  {name:"バインド", img:"https://img.gamewith.jp/img/fe86522d40ce292ca0f71d65e784913d.png"},
+  {name:"スプリット", img:"https://img.gamewith.jp/img/d4a7df6d7f3f37885ce9a514f2ffc073.png"},
+  {name:"アセント", img:"https://img.gamewith.jp/img/484c2afbd160f8b062ccaa97cff0f1f6.png"},
+  {name:"アイスボックス", img:"https://img.gamewith.jp/img/ac118bbda715856a647dddb95d03a82c.png"},
+  {name:"ブリーズ", img:"https://img.gamewith.jp/img/7c20ead4bebcea5d01ee2d45f2932d11.png"},
+  {name:"フラクチャー", img:"https://img.gamewith.jp/img/49d4b2e576972fac889c1aaa774f3192.png"},
+  {name:"パール", img:"https://img.gamewith.jp/img/e54256eac445578bcba44ee88ec9673b.png"},
+  {name:"ロータス", img:"https://img.gamewith.jp/img/7ca6a01157b858a8d3b98f3a7b3e6008.png"},
+  {name:"サンセット", img:"https://img.gamewith.jp/img/cecfc952b79d612c6e32f20b25af9e53.png"},
+  {name:"アビス", img:"https://img.gamewith.jp/img/53328fc5631a37914dd9ebafb6e86632.png"},
+  {name:"カロード", img:"https://esports-world.jp/images/upload/2025/06/873204fbdf6139942c96b4b500bbf41b.png"}
+];
+
+const competitivePool = ["バインド","スプリット","フラクチャー","パール","ヘイブン","ブリーズ","ロータス"];
+let lastRandom = null;
+
+function switchMode() {
+  const mode = document.querySelector("input[name='mode']:checked").value;
+  document.getElementById("randomSection").style.display = mode==="random" ? "" : "none";
+  document.getElementById("banpickSection").style.display = mode==="banpick" ? "" : "none";
+  if(mode==="random") renderRandomList();
+  if(mode==="banpick") initBanPick();
+}
+
+// -------------------- ランダムモード --------------------
+function renderRandomList() {
+  const poolChoice = document.querySelector("input[name='pool']:checked").value;
+  const listDiv = document.getElementById("randomMapList");
+  listDiv.innerHTML = "";
+  const pool = poolChoice==="competitive"
+    ? allMaps.filter(m => competitivePool.includes(m.name))
+    : allMaps;
+  pool.forEach(m => {
+    const div = document.createElement("div");
+    div.className="map";
+    div.innerHTML = `<img src="${m.img}"><div class="map-name">${m.name}</div>`;
+    listDiv.appendChild(div);
+  });
+}
+
+function pickRandom() {
+  const poolChoice = document.querySelector("input[name='pool']:checked").value;
+  const pool = poolChoice==="competitive"
+    ? allMaps.filter(m => competitivePool.includes(m.name))
+    : allMaps;
+  const choices = pool.map(m=>m.name).filter(n=>n!==lastRandom || pool.length===1);
+  const pickName = choices[Math.floor(Math.random()*choices.length)];
+  lastRandom = pickName;
+  const pickMap = allMaps.find(m=>m.name===pickName);
+  // 結果だけ表示
+  document.getElementById("randomMapList").innerHTML = "";
+  document.getElementById("randomResult").innerHTML = `<div>${pickName}</div><img src="${pickMap.img}">`;
+}
+
+// -------------------- BAN/PICKモード --------------------
+let banPool=[], phase="BAN", team="A";
+function initBanPick() {
+  banPool = allMaps.filter(m => competitivePool.includes(m.name)); // ランクマップのみ
+  phase="BAN"; team="A";
+  document.getElementById("banInfo").innerText = `Team ${team} ${phase}`;
+  document.getElementById("log").innerHTML = "";
+  renderBanList();
+}
+function renderBanList() {
+  const div = document.getElementById("banMapList"); div.innerHTML="";
+  banPool.forEach(m => {
+    const card = document.createElement("div");
+    card.className="map";
+    card.innerHTML = `<img src="${m.img}"><div class="map-name">${m.name}</div>`;
+    card.onclick = ()=>handleBanPick(m.name, card);
+    div.appendChild(card);
+  });
+}
+function handleBanPick(name, elem) {
+  if(elem.classList.contains("banned")||elem.classList.contains("picked")) return;
+  if(phase==="BAN") {
+    elem.classList.add("banned"); // 画像残して灰色化
+    document.getElementById("log").innerHTML = `Team ${team} BAN → ${name}<br>` + document.getElementById("log").innerHTML;
+  } else {
+    elem.classList.add("picked");
+    document.getElementById("log").innerHTML = `Team ${team} PICK → ${name}<br>` + document.getElementById("log").innerHTML;
+  }
+  // BAN/PICK中も画像は残すのでリストから削除しない
+  team = team==="A"?"B":"A";
+  if(phase==="BAN" && document.querySelectorAll('.banned').length >= 4) phase="PICK";
+  if(document.querySelectorAll('.map:not(.banned):not(.picked)').length===1) document.getElementById("banInfo").innerText="終了";
+  else document.getElementById("banInfo").innerText = `Team ${team} ${phase}`;
+}
+
+renderRandomList();
+</script>
+
+</body>
+</html>

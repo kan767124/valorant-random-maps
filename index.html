@@ -7,7 +7,7 @@
 body { margin:0; font-family: Arial; background:#0f1923; color:white; text-align:center; }
 h1 { padding:15px; background:black; font-size:24px; }
 button { margin:8px; padding:10px 15px; border:none; border-radius:8px; background:#ff4655; color:white; cursor:pointer; }
-.maps { display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; justify-content:center; margin:15px; } /* 横最大5列 */
+.maps { display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; justify-content:center; margin:15px; }
 .map { position:relative; cursor:pointer; }
 .map img { width:100%; border-radius:8px; transition:0.3s; }
 .map-name { background: rgba(0,0,0,0.7); padding:4px; position:absolute; bottom:0; width:100%; font-size:14px; font-weight:bold; text-align:center; }
@@ -60,7 +60,6 @@ const allMaps = [
   {name:"アビス", img:"https://img.gamewith.jp/img/53328fc5631a37914dd9ebafb6e86632.png"},
   {name:"カロード", img:"https://esports-world.jp/images/upload/2025/06/873204fbdf6139942c96b4b500bbf41b.png"}
 ];
-
 const competitivePool = ["バインド","スプリット","フラクチャー","パール","ヘイブン","ブリーズ","ロータス"];
 let lastRandom = null;
 
@@ -97,7 +96,6 @@ function pickRandom() {
   const pickName = choices[Math.floor(Math.random()*choices.length)];
   lastRandom = pickName;
   const pickMap = allMaps.find(m=>m.name===pickName);
-  // 結果だけ表示
   document.getElementById("randomMapList").innerHTML = "";
   document.getElementById("randomResult").innerHTML = `<div>${pickName}</div><img src="${pickMap.img}">`;
 }
@@ -105,7 +103,7 @@ function pickRandom() {
 // -------------------- BAN/PICKモード --------------------
 let banPool=[], phase="BAN", team="A";
 function initBanPick() {
-  banPool = allMaps.filter(m => competitivePool.includes(m.name)); // ランクマップのみ
+  banPool = allMaps.filter(m => competitivePool.includes(m.name));
   phase="BAN"; team="A";
   document.getElementById("banInfo").innerText = `Team ${team} ${phase}`;
   document.getElementById("log").innerHTML = "";
@@ -124,13 +122,12 @@ function renderBanList() {
 function handleBanPick(name, elem) {
   if(elem.classList.contains("banned")||elem.classList.contains("picked")) return;
   if(phase==="BAN") {
-    elem.classList.add("banned"); // 画像残して灰色化
+    elem.classList.add("banned");
     document.getElementById("log").innerHTML = `Team ${team} BAN → ${name}<br>` + document.getElementById("log").innerHTML;
   } else {
     elem.classList.add("picked");
     document.getElementById("log").innerHTML = `Team ${team} PICK → ${name}<br>` + document.getElementById("log").innerHTML;
   }
-  // BAN/PICK中も画像は残すのでリストから削除しない
   team = team==="A"?"B":"A";
   if(phase==="BAN" && document.querySelectorAll('.banned').length >= 4) phase="PICK";
   if(document.querySelectorAll('.map:not(.banned):not(.picked)').length===1) document.getElementById("banInfo").innerText="終了";
